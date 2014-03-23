@@ -1,11 +1,16 @@
 package com.crimsonsky.fitwatch.app;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
+import android.content.Intent;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -16,6 +21,19 @@ import java.util.Date;
  */
 
 public class MainActivity extends Activity {
+
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle bundle = intent.getExtras();
+            if (bundle != null) {
+                String stepsCount = bundle.getString(StepCounterService.STEPS_COUNT);
+
+                TextView stepsCountView = (TextView) findViewById(R.id.stepsView);
+                stepsCountView.setText(stepsCount);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +54,23 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(receiver, new IntentFilter(StepCounterService.NOTIFICATION));
+
+        Intent intent = new Intent(this, StepCounterService.class);
+        TextView dateView = (TextView) findViewById(R.id.dateView);
+        intent.putExtra(StepCounterService.TODAYS_DATE,dateView.getText());
+        startService(intent);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(receiver);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -52,4 +87,9 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void onWatchClick(View view) {
+        Intent intent = new Intent(this, StepCounterService.class);
+        intent.putExtra(StepCounterService.WATCH,StepCounterService.WATCH);
+        startService(intent);
+    }
 }

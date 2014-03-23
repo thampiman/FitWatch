@@ -45,6 +45,7 @@
         android:layout_height="wrap_content"
         android:text="@string/watch"
         android:id="@+id/watchButton"
+        android:onClick="onWatchClick"
         android:layout_marginBottom="80dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
