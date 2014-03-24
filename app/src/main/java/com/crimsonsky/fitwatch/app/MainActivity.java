@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.content.Intent;
 
@@ -88,8 +89,17 @@ public class MainActivity extends Activity {
     }
 
     public void onWatchClick(View view) {
-        Intent intent = new Intent(this, StepCounterService.class);
-        intent.putExtra(StepCounterService.WATCH,StepCounterService.WATCH);
-        startService(intent);
+        Button watchButton = (Button) view;
+        if (watchButton != null) {
+            if (watchButton.getText().equals(getResources().getString(R.string.watch))) {
+                watchButton.setText(getResources().getString(R.string.unwatch));
+            } else {
+                watchButton.setText(getResources().getString(R.string.watch));
+            }
+
+            Intent intent = new Intent(this, StepCounterService.class);
+            intent.putExtra(StepCounterService.WATCH,StepCounterService.WATCH);
+            startService(intent);
+        }
     }
 }

@@ -8,5 +8,5 @@
     <string name="zero">0</string>
     <string name="steps">Steps</string>
     <string name="watch">Watch</string>
-
+    <string name="unwatch">Unwatch</string>
 </resources>

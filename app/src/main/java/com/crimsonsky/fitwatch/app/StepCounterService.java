@@ -1,6 +1,5 @@
 package com.crimsonsky.fitwatch.app;
 
-import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -10,7 +9,6 @@ import android.hardware.SensorManager;
 import android.os.*;
 import android.os.Process;
 import android.preview.support.v4.app.NotificationManagerCompat;
-import android.preview.support.wearable.notifications.WearableNotifications;
 import android.support.v4.app.NotificationCompat;
 
 /**
@@ -24,11 +22,10 @@ public class StepCounterService extends Service {
     public static final String NOTIFICATION = "com.crimsonsky.fitwatch.app";
     public static final int NOTIFICATION_ID = 0;
 
-    private NotificationManagerCompat mNotificationManager;
-
     private ServiceHandler mServiceHandler;
     private int mStepsCount;
     private String mTodaysDate = null;
+    private boolean watch = false;
 
     private float mLastValues[] = new float[3*2];
     private float mScale[] = new float[2];
@@ -71,15 +68,37 @@ public class StepCounterService extends Service {
                 mSensorManager.registerListener(this, mAccelerometer,
                                                 SensorManager.SENSOR_DELAY_NORMAL);
             } else if (command.contains(WATCH)) {
-                // Send notifications to watch
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext());
-                builder.setContentTitle(getResources().getString(R.string.app_name));
-                builder.setContentText(Integer.toString(mStepsCount) + " " +
-                                       getResources().getString(R.string.steps));
-
-                Notification notification = new WearableNotifications.Builder(builder).build();
-                mNotificationManager.notify(NOTIFICATION_ID, notification);
+                if (!watch) {
+                    sendNotification();
+                    watch = true;
+                } else {
+                    cancelNotification();
+                    watch = false;
+                }
             }
+        }
+
+        private void sendNotification() {
+            // Send notifications to watch
+            NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(getApplicationContext())
+                            .setContentTitle(getResources().getString(R.string.app_name))
+                            .setContentText(Integer.toString(mStepsCount) + " " +
+                                    getResources().getString(R.string.steps))
+                            .setSmallIcon(R.mipmap.ic_notification_fitwatch);
+
+            // Get an instance of the NotificationManager service
+            NotificationManagerCompat notificationManager =
+                    NotificationManagerCompat.from(getApplicationContext());
+
+            // Build the notification and issues it with notification manager.
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+        }
+
+        private void cancelNotification() {
+            NotificationManagerCompat notificationManager =
+                    NotificationManagerCompat.from(getApplicationContext());
+            notificationManager.cancel(NOTIFICATION_ID);
         }
 
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -118,6 +137,10 @@ public class StepCounterService extends Service {
                                 Intent intent = new Intent(NOTIFICATION);
                                 intent.putExtra(STEPS_COUNT, Integer.toString(mStepsCount));
                                 sendBroadcast(intent);
+
+                                if (watch) {
+                                    sendNotification();
+                                }
                                 mLastMatch = extType;
                             }
                             else {
@@ -142,8 +165,6 @@ public class StepCounterService extends Service {
 
         // Link the HandlerThread's looper with our ServiceHandler
         mServiceHandler = new ServiceHandler(thread.getLooper());
-
-        mNotificationManager = NotificationManagerCompat.from(this);
     }
 
     @Override
